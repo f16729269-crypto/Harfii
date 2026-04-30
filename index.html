@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta name="theme-color" content="#2979FF">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Harfi">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<title>Harfi – Book a Craftsman</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --primary:#2979FF;--accent:#FF6D00;--success:#00C853;--error:#FF1744;--warning:#FFB300;
+  --bg:#F5F7FF;--card:#fff;--sub2:#EEF2FF;--text:#0D1B3E;--sub:#5A6A8A;--border:#E0E8FF;
+  --safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px);
+}
+.dark{--bg:#0A0E1A;--card:#131929;--sub2:#1A2236;--text:#F0F4FF;--sub:#8A9CC0;--border:#1E2D4A}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);transition:background .3s,color .3s}
+body{font-family:'Inter',sans-serif}
+.ar body,.ar *{font-family:'Cairo',sans-serif !important}
+
+/* APP SHELL */
+#app{display:flex;flex-direction:column;height:100%;height:-webkit-fill-available;max-width:430px;margin:0 auto;position:relative;overflow:hidden}
+.screen{display:none;flex-direction:column;flex:1;overflow:hidden;background:var(--bg);animation:fadeUp .2s ease}
+.screen.active{display:flex}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.scroll-area{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;overscroll-behavior:contain}
+.scroll-area::-webkit-scrollbar{display:none}
+
+/* BOTTOM NAV */
+.bnav{display:flex;justify-content:space-around;align-items:center;padding:10px 0;padding-bottom:calc(10px + var(--safe-bottom));background:var(--card);border-top:1px solid var(--border);flex-shrink:0;transition:background .3s,border-color .3s}
+.ni{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:6px 18px;border-radius:12px;position:relative;user-select:none;transition:background .2s}
+.ni.active{background:rgba(41,121,255,.1)}
+.ni svg{width:22px;height:22px;stroke:var(--sub);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ni.active svg{stroke:var(--primary)}
+.ni span{font-size:10px;font-weight:700;color:var(--sub)}
+.ni.active span{color:var(--primary)}
+.ndot{width:4px;height:4px;border-radius:50%;background:var(--primary)}
+.nbadge{position:absolute;top:2px;right:8px;background:var(--error);color:#fff;font-size:9px;font-weight:900;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+
+/* SHARED */
+.card{background:var(--card);border-radius:18px;border:1px solid var(--border);transition:background .3s,border-color .3s}
+.ava{border-radius:14px;display:flex;align-items:center;justify-content:center;font-weight:900;border:2.5px solid;flex-shrink:0}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border-radius:20px;font-size:10px;font-weight:800}
+.badge.online{background:rgba(0,200,83,.12);color:var(--success)}
+.badge.busy{background:rgba(255,23,68,.1);color:var(--error)}
+.badge .dot{width:6px;height:6px;border-radius:50%}
+.badge.online .dot{background:var(--success)}
+.badge.busy .dot{background:var(--error)}
+.btn-p{width:100%;padding:15px;border-radius:15px;border:none;background:var(--primary);color:#fff;font-size:15px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .2s,transform .1s;font-family:inherit}
+.btn-p:active{transform:scale(.97);opacity:.9}
+.btn-p:disabled{opacity:.5}
+.btn-o{width:100%;padding:13px;border-radius:15px;border:1.5px solid var(--border);background:none;color:var(--sub);font-size:14px;font-weight:700;cursor:pointer;margin-top:10px;font-family:inherit}
+.btn-o.red{border-color:var(--error);color:var(--error)}
+.back-btn{width:36px;height:36px;border-radius:50%;background:var(--sub2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:22px;color:var(--text);flex-shrink:0}
+.appbar{background:var(--card);border-bottom:1px solid var(--border);padding:calc(44px + var(--safe-top)) 16px 14px;display:flex;align-items:center;gap:12px;font-size:17px;font-weight:900;color:var(--text);transition:all .3s;flex-shrink:0}
+.loader{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:48px}
+.spinner{width:34px;height:34px;border-radius:50%;border:3px solid var(--border);border-top-color:var(--primary);animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);background:#131929;color:#fff;padding:12px 24px;border-radius:30px;font-size:14px;font-weight:700;box-shadow:0 8px 32px rgba(0,0,0,.4);z-index:9999;opacity:0;transition:all .3s;white-space:nowrap;pointer-events:none}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#offline-banner{background:var(--error);color:#fff;text-align:center;padding:8px;font-size:12px;font-weight:700;display:none;flex-shrink:0}
+#offline-banner.show{display:block}
+.finput{width:100%;padding:13px 15px;border-radius:14px;border:1.5px solid var(--border);background:var(--sub2);font-size:14px;color:var(--text);outline:none;transition:border-color .2s,background .3s;font-family:inherit}
+.finput:focus{border-color:var(--primary);background:var(--card)}
+.flabel{font-size:12px;font-weight:800;color:var(--sub);margin-bottom:6px;display:block}
+.fgroup{margin-bottom:14px}
+
+/* ── AUTH ── */
+.auth-wrap{flex:1;display:flex;flex-direction:column;align-items:center;padding:0 28px;overflow-y:auto}
+.auth-logo{margin-top:60px;width:80px;height:80px;border-radius:28px;background:linear-gradient(135deg,#1A237E,#2979FF);display:flex;align-items:center;justify-content:center;box-shadow:0 12px 40px rgba(41,121,255,.4);font-size:36px}
+.auth-title{font-size:26px;font-weight:900;color:var(--text);margin-top:20px;text-align:center}
+.auth-sub{font-size:14px;color:var(--sub);margin-top:6px;text-align:center}
+.auth-form{width:100%;margin-top:32px}
+.auth-switch{font-size:14px;color:var(--sub);margin-top:20px;text-align:center}
+.auth-switch b{color:var(--primary);cursor:pointer}
+#auth-error{color:var(--error);font-size:13px;font-weight:700;margin-top:10px;text-align:center;display:none}
+
+/* ── HOME ── */
+.home-hdr{background:var(--card);padding:calc(44px + var(--safe-top)) 20px 16px;border-bottom:1px solid var(--border);flex-shrink:0;transition:all .3s}
+.hdr-row{display:flex;align-items:flex-start;justify-content:space-between}
+.hdr-row h1{font-size:26px;font-weight:900;color:var(--primary);line-height:1}
+.hdr-row small{font-size:12px;color:var(--sub);display:block;margin-top:2px}
+.hdr-btns{display:flex;gap:6px}
+.hbtn{background:var(--sub2);border:1px solid var(--border);border-radius:20px;padding:6px 12px;font-size:12px;font-weight:800;color:var(--primary);cursor:pointer;transition:all .2s;font-family:inherit}
+.hbtn:active{transform:scale(.93)}
+.loc-pill{display:inline-flex;align-items:center;gap:5px;background:rgba(41,121,255,.1);border-radius:20px;padding:6px 12px;margin-top:10px;font-size:12px;font-weight:700;color:var(--primary);cursor:pointer;border:none;font-family:inherit}
+.srch{margin:14px 20px 0;display:flex;align-items:center;gap:10px;background:var(--sub2);border:1.5px solid var(--border);border-radius:14px;padding:11px 14px;transition:all .3s}
+.srch:focus-within{border-color:var(--primary);background:var(--card)}
+.srch input{flex:1;background:none;border:none;outline:none;font-size:13px;color:var(--text);font-family:inherit}
+.srch input::placeholder{color:var(--sub)}
+.sec-lbl{font-size:12px;font-weight:800;color:var(--sub);letter-spacing:.4px;padding:0 20px;margin:16px 0 10px}
+.cats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:0 20px}
+.cat-chip{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;border-radius:14px;background:var(--sub2);border:1.5px solid var(--border);cursor:pointer;transition:all .2s;font-size:20px}
+.cat-chip span{font-size:9px;font-weight:800;color:var(--sub)}
+.cat-chip.sel{border-color:var(--primary);background:rgba(41,121,255,.1)}
+.cat-chip.sel span{color:var(--primary)}
+.cat-chip:active{transform:scale(.92)}
+.tab-bar{display:flex;margin:16px 20px 14px;background:var(--sub2);border-radius:12px;padding:4px}
+.tab-i{flex:1;text-align:center;font-size:11px;font-weight:700;padding:8px 4px;border-radius:9px;color:var(--sub);cursor:pointer;transition:all .2s;font-family:inherit}
+.tab-i.active{background:var(--card);color:var(--primary);box-shadow:0 2px 8px rgba(0,0,0,.12)}
+
+/* WORKER CARD */
+.wcard{margin:0 20px 14px;padding:16px;border-radius:18px;background:var(--card);border:1px solid var(--border);box-shadow:0 4px 20px rgba(41,121,255,.06);cursor:pointer;transition:transform .15s,background .3s,border-color .3s}
+.wcard:active{transform:scale(.98)}
+.wc-top{display:flex;gap:12px;align-items:flex-start}
+.wc-info{flex:1}
+.wc-name{font-size:15px;font-weight:800;color:var(--text)}
+.wc-prof{font-size:12px;color:var(--sub);margin-top:2px}
+.stars{display:flex;gap:1px;align-items:center;margin-top:4px}
+.wc-meta{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
+.meta-c{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--sub)}
+.wc-bot{display:flex;gap:8px;margin-top:12px}
+.btn-call{flex:1;padding:10px;border-radius:12px;border:1.5px solid var(--primary);background:none;color:var(--primary);font-size:13px;font-weight:800;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:5px;font-family:inherit}
+.btn-book{flex:2;padding:10px;border-radius:12px;border:none;color:#fff;font-size:13px;font-weight:800;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:5px;font-family:inherit}
+.btn-call:active,.btn-book:active{transform:scale(.95)}
+
+/* DETAIL */
+.det-hdr{height:200px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:20px;position:relative}
+.det-back{position:absolute;top:calc(44px + var(--safe-top));right:16px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.18);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:22px;color:#fff;border:1px solid rgba(255,255,255,.2)}
+.stat-row{display:flex;gap:10px;padding:16px 16px 0}
+.stat-c{flex:1;padding:14px 10px;text-align:center;border-radius:14px;background:var(--card);border:1px solid var(--border);transition:all .3s}
+.stat-v{font-size:20px;font-weight:900;color:var(--text)}
+.stat-l{font-size:10px;color:var(--sub)}
+.det-actions{display:flex;gap:10px;padding:14px 16px;padding-bottom:calc(14px + var(--safe-bottom));background:var(--card);border-top:1px solid var(--border);flex-shrink:0}
+
+/* BOOKING */
+.pay-tile{display:flex;align-items:center;gap:12px;padding:14px;border-radius:14px;background:var(--sub2);border:2px solid var(--border);margin-bottom:10px;cursor:pointer;transition:all .2s}
+.pay-tile.sel{border-color:var(--primary);background:rgba(41,121,255,.06)}
+.radio{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;transition:border-color .2s;flex-shrink:0}
+.pay-tile.sel .radio{border-color:var(--primary)}
+.rdot{width:10px;height:10px;border-radius:50%;background:var(--primary);opacity:0;transition:opacity .2s}
+.pay-tile.sel .rdot{opacity:1}
+.sum-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:14px}
+.sum-r{display:flex;justify-content:space-between;margin-bottom:8px}
+.sum-r .l{font-size:13px;color:var(--sub)}
+.sum-r .v{font-size:13px;font-weight:700;color:var(--text)}
+.sum-tot{display:flex;justify-content:space-between;padding-top:12px;border-top:1px solid var(--border)}
+.sum-tot .l{font-size:16px;font-weight:900;color:var(--text)}
+.sum-tot .v{font-size:20px;font-weight:900;color:var(--primary)}
+
+/* OTP */
+.otp-boxes{display:flex;gap:12px;margin-top:32px;direction:ltr;justify-content:center}
+.otp-b{width:58px;height:68px;border-radius:14px;border:2px solid var(--border);background:var(--card);font-size:28px;font-weight:900;color:var(--primary);text-align:center;outline:none;transition:border-color .2s;font-family:inherit}
+.otp-b:focus{border-color:var(--primary)}
+.otp-b.filled{border-color:var(--primary)}
+
+/* SUCCESS */
+.suc-circle{width:110px;height:110px;border-radius:50%;background:rgba(0,200,83,.12);border:3px solid var(--success);display:flex;align-items:center;justify-content:center;font-size:54px;animation:popIn .6s cubic-bezier(.34,1.56,.64,1)}
+@keyframes popIn{from{transform:scale(.3);opacity:0}to{transform:scale(1);opacity:1}}
+
+/* CHAT */
+.chat-msgs{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;scrollbar-width:none}
+.chat-msgs::-webkit-scrollbar{display:none}
+.msg-wrap{display:flex;flex-direction:column}
+.msg-wrap.user{align-items:flex-end}
+.msg-wrap.worker,.msg-wrap.system{align-items:flex-start}
+.msg-bubble{max-width:78%;padding:10px 14px;border-radius:18px;font-size:14px;line-height:1.5}
+.msg-wrap.user .msg-bubble{background:var(--primary);color:#fff;border-bottom-right-radius:4px}
+.msg-wrap.worker .msg-bubble{background:var(--card);border:1px solid var(--border);color:var(--text);border-bottom-left-radius:4px}
+.msg-wrap.system .msg-bubble{background:rgba(41,121,255,.1);color:var(--primary);border-radius:10px;font-size:12px;font-weight:700;text-align:center}
+.msg-time{font-size:10px;color:var(--sub);margin-top:3px;padding:0 4px}
+.chat-input-bar{display:flex;gap:10px;padding:12px 16px;padding-bottom:calc(12px + var(--safe-bottom));background:var(--card);border-top:1px solid var(--border);flex-shrink:0}
+.chat-input-bar input{flex:1;padding:11px 15px;border-radius:50px;border:1.5px solid var(--border);background:var(--sub2);font-size:14px;color:var(--text);outline:none;font-family:inherit;transition:border-color .2s}
+.chat-input-bar input:focus{border-color:var(--primary)}
+.chat-send{width:44px;height:44px;border-radius:50%;border:none;background:var(--primary);color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .15s}
+.chat-send:active{transform:scale(.9)}
+
+/* LOCATION PICKER */
+.loc-modal{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;display:none;align-items:flex-end;justify-content:center}
+.loc-modal.show{display:flex}
+.loc-sheet{background:var(--card);border-radius:24px 24px 0 0;padding:20px 20px calc(20px + var(--safe-bottom));width:100%;max-width:430px;animation:slideUp .3s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.loc-map-fake{height:160px;background:linear-gradient(135deg,rgba(41,121,255,.08),rgba(0,188,212,.06));border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid var(--border);margin-bottom:14px;font-size:36px;gap:8px;cursor:pointer;transition:background .2s}
+.loc-map-fake:active{background:rgba(41,121,255,.12)}
+.loc-presets{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.loc-preset{display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;background:var(--sub2);border:1.5px solid var(--border);cursor:pointer;transition:all .2s;font-size:14px;color:var(--text);font-weight:600}
+.loc-preset.sel{border-color:var(--primary);background:rgba(41,121,255,.08)}
+.loc-preset:active{transform:scale(.98)}
+
+/* BOOKINGS LIST */
+.bli{margin:0 16px 14px;padding:16px;border-radius:18px;background:var(--card);border:1.5px solid var(--border);transition:all .3s;cursor:pointer}
+.bli.active-b{border-color:rgba(41,121,255,.35);box-shadow:0 4px 20px rgba(41,121,255,.12)}
+.bli-top{display:flex;gap:12px;align-items:flex-start}
+.bli-meta{margin-top:10px;padding:8px 12px;border-radius:10px;background:var(--sub2);display:flex;align-items:center;gap:10px;font-size:13px;font-weight:800;color:var(--primary)}
+.bli-id{font-size:11px;color:var(--sub);margin-right:auto}
+.bli-bot{display:flex;gap:8px;margin-top:10px}
+.bli-btn{flex:1;padding:9px;border-radius:10px;border:1.5px solid rgba(41,121,255,.4);background:none;color:var(--primary);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;font-family:inherit}
+.bli-btn.fill{background:var(--primary);color:#fff;border-color:var(--primary)}
+
+/* PROFILE */
+.prof-hdr{background:var(--card);border-bottom:1px solid var(--border);padding:calc(44px + var(--safe-top)) 20px 24px;text-align:center;flex-shrink:0}
+.prof-ava{width:76px;height:76px;border-radius:24px;background:rgba(41,121,255,.15);border:3px solid var(--primary);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:900;color:var(--primary);margin:0 auto 12px}
+.prof-stats{display:flex;margin-top:16px}
+.ps{flex:1;text-align:center}
+.ps-v{font-size:20px;font-weight:900;color:var(--primary)}
+.ps-l{font-size:11px;color:var(--sub)}
+.ps+.ps{border-right:1px solid var(--border)}
+.ar .ps+.ps{border-right:none;border-left:1px solid var(--border)}
+.set-item{display:flex;align-items:center;gap:12px;padding:14px 12px;border-radius:14px;background:var(--card);border:1px solid var(--border);margin-bottom:10px;cursor:pointer;transition:all .2s}
+.set-item:active{transform:scale(.98)}
+.set-icon{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+
+/* TRACKING */
+.tl-item{display:flex;gap:14px}
+.tl-line{display:flex;flex-direction:column;align-items:center}
+.tl-circle{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;border:2px solid var(--border);background:var(--card);flex-shrink:0;transition:all .4s}
+.tl-circle.done{background:var(--primary);border-color:var(--primary)}
+.tl-conn{width:2px;height:48px;background:var(--border);margin:4px 0;transition:background .4s}
+.tl-conn.done{background:var(--primary)}
+.tl-text{padding-top:10px}
+.tl-label{font-size:15px;font-weight:800;color:var(--text)}
+.tl-label.done{color:var(--primary)}
+.tl-sub{font-size:12px;color:var(--sub);margin-top:2px}
+
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-10px)}40%{transform:translateX(10px)}60%{transform:translateX(-8px)}80%{transform:translateX(8px)}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(41,121,255,.4)}50%{box-shadow:0 0 0 10px rgba(41,121,255,0)}}
+</style>
+</head>
+<body>
+<div id="app">
+
+<div id="offline-banner">📵 Offline — some data may be outdated</div>
+
+<!-- ═══ AUTH ═══ -->
+<div class="screen active" id="screen-auth">
+  <div class="auth-wrap">
+    <div class="auth-logo">🔨</div>
+    <div class="auth-title" id="auth-title">Welcome to Harfi</div>
+    <div class="auth-sub" id="auth-sub">Book certified craftsmen instantly</div>
+    <div class="auth-form" id="auth-form">
+      <div class="fgroup" id="fg-name" style="display:none">
+        <label class="flabel" id="lbl-name">Full Name</label>
+        <input class="finput" id="inp-name" type="text" placeholder="Your full name">
+      </div>
+      <div class="fgroup">
+        <label class="flabel" id="lbl-email">Email</label>
+        <input class="finput" id="inp-email" type="email" placeholder="you@email.com">
+      </div>
+      <div class="fgroup" id="fg-phone" style="display:none">
+        <label class="flabel" id="lbl-phone">Phone</label>
+        <input class="finput" id="inp-phone" type="tel" placeholder="+20 100 000 0000">
+      </div>
+      <div class="fgroup">
+        <label class="flabel" id="lbl-pass">Password</label>
+        <input class="finput" id="inp-pass" type="password" placeholder="Password">
+      </div>
+      <div id="auth-error"></div>
+      <button class="btn-p" id="auth-btn" onclick="submitAuth()" style="margin-top:8px">Login</button>
+      <div class="auth-switch" id="auth-switch">
+        Don't have an account? <b onclick="toggleAuthMode()">Sign up</b>
+      </div>
+      <div style="margin-top:16px;text-align:center;color:var(--sub);font-size:12px">
+        ── or try demo ──
+      </div>
+      <button class="btn-o" onclick="demoLogin()">Try Demo Account</button>
+    </div>
+    <div style="height:40px"></div>
+  </div>
+</div>
+
+<!-- ═══ HOME ═══ -->
+<div class="screen" id="screen-home">
+  <div class="home-hdr">
+    <div class="hdr-row">
+      <div>
+        <small id="home-greeting">Good morning 👋</small>
+        <h1>Harfi</h1>
+      </div>
+      <div class="hdr-btns">
+        <button class="hbtn" id="lang-btn" onclick="toggleLang()">ع</button>
+        <button class="hbtn" id="dark-btn" onclick="toggleDark()">🌙</button>
+      </div>
+    </div>
+    <button class="loc-pill" onclick="showLocModal()">
+      📍 <span id="home-loc">Cairo, Egypt</span> ▾
+    </button>
+    <div style="margin-top:14px">
+      <div class="srch">
+        <span>🔍</span>
+        <input id="srch-inp" type="text" placeholder="Search for a service..." oninput="handleSearch(this.value)">
+      </div>
+    </div>
+  </div>
+  <div class="scroll-area">
+    <div class="sec-lbl" id="lbl-cats">Services</div>
+    <div class="cats-grid" id="cats-grid">
+      <div class="cat-chip sel" data-cat="Plumbing" onclick="selectCat(this)">🔧<span>Plumbing</span></div>
+      <div class="cat-chip" data-cat="Electrical" onclick="selectCat(this)">⚡<span>Electrical</span></div>
+      <div class="cat-chip" data-cat="Mechanic" onclick="selectCat(this)">🚗<span>Mechanic</span></div>
+      <div class="cat-chip" data-cat="AC" onclick="selectCat(this)">❄️<span>AC</span></div>
+      <div class="cat-chip" data-cat="Painting" onclick="selectCat(this)">🎨<span>Painting</span></div>
+      <div class="cat-chip" data-cat="Carpentry" onclick="selectCat(this)">🪵<span>Carpentry</span></div>
+      <div class="cat-chip" data-cat="Construction" onclick="selectCat(this)">🏗️<span>Building</span></div>
+    </div>
+    <div class="tab-bar">
+      <div class="tab-i active" onclick="setSort(this,'distance')" id="tab-nearest">Nearest</div>
+      <div class="tab-i" onclick="setSort(this,'rating')" id="tab-top">Top Rated</div>
+      <div class="tab-i" onclick="setSort(this,'online')" id="tab-avail">Available</div>
+    </div>
+    <div id="workers-list"><div class="loader"><div class="spinner"></div></div></div>
+    <div style="height:20px"></div>
+  </div>
+  <div class="bnav" id="bnav-home">
+    <div class="ni active" onclick="showScreen('home')">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span id="nav-home-lbl">Home</span><div class="ndot"></div>
+    </div>
+    <div class="ni" onclick="showScreen('bookings')" style="position:relative">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span id="nav-book-lbl">Bookings</span><div class="nbadge" id="badge-h">0</div>
+    </div>
+    <div class="ni" onclick="showScreen('profile')">
+      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span id="nav-prof-lbl">Profile</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ DETAIL ═══ -->
+<div class="screen" id="screen-detail">
+  <div class="det-hdr" id="det-hdr">
+    <div class="det-back" onclick="showScreen('home')">‹</div>
+    <div class="ava" id="det-ava" style="width:80px;height:80px;font-size:32px;border-color:#2979FF;color:#2979FF;background:rgba(41,121,255,.15)">A</div>
+    <div style="color:#fff;font-size:20px;font-weight:900;margin-top:10px" id="det-name">Ahmed</div>
+    <div style="color:rgba(255,255,255,.75);font-size:13px;margin-top:2px" id="det-prof">Plumber</div>
+  </div>
+  <div class="scroll-area">
+    <div class="stat-row">
+      <div class="stat-c"><div style="font-size:20px">⭐</div><div class="stat-v" id="ds-rating" style="color:#FFB300">4.9</div><div class="stat-l" id="ds-rev">128 reviews</div></div>
+      <div class="stat-c"><div style="font-size:20px">🔧</div><div class="stat-v" id="ds-jobs" style="color:var(--primary)">340</div><div class="stat-l" id="lbl-jobs">jobs</div></div>
+      <div class="stat-c"><div style="font-size:20px">🏆</div><div class="stat-v" id="ds-exp" style="color:#FF6D00">8</div><div class="stat-l" id="lbl-yrs">yrs exp</div></div>
+    </div>
+    <div style="margin:14px 16px 0;padding:14px;border-radius:14px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;transition:all .3s">
+      <div id="det-status" class="badge online"><div class="dot"></div>Available</div>
+      <div style="font-size:17px;font-weight:900;color:var(--primary)" id="det-price">150 EGP/hr</div>
+    </div>
+    <div style="padding:16px 16px 0">
+      <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:8px" id="lbl-about">About</div>
+      <div style="font-size:13px;color:var(--sub);line-height:1.7" id="det-desc">Professional craftsman with years of experience.</div>
+    </div>
+    <div style="height:16px"></div>
+  </div>
+  <div class="det-actions">
+    <button class="btn-call" onclick="showToast('📞 Calling...')">📞 <span id="btn-call-lbl">Call</span></button>
+    <button class="btn-book" id="det-book-btn" style="flex:2;background:var(--primary)" onclick="showScreen('booking')">📅 <span id="btn-book-lbl">Book Now</span></button>
+  </div>
+</div>
+
+<!-- ═══ BOOKING ═══ -->
+<div class="screen" id="screen-booking">
+  <div class="appbar"><div class="back-btn" onclick="showScreen('detail')">‹</div><span id="lbl-bookNow">Book Now</span></div>
+  <div class="scroll-area">
+    <div style="padding:14px 16px 0">
+      <div class="card" style="display:flex;gap:12px;padding:14px;align-items:center">
+        <div class="ava" id="b-ava" style="width:50px;height:50px;font-size:20px;color:#2979FF;border-color:#2979FF;background:rgba(41,121,255,.12)">A</div>
+        <div style="flex:1"><div class="wc-name" id="b-name">Ahmed</div><div class="wc-prof" id="b-prof">Plumber · ⭐ 4.9</div></div>
+        <div style="text-align:left"><div style="font-size:20px;font-weight:900;color:var(--primary)" id="b-price">150</div><div style="font-size:10px;color:var(--primary)">EGP/hr</div></div>
+      </div>
+      <div style="font-size:14px;font-weight:800;color:var(--text);margin:14px 0 8px" id="lbl-desc">Describe the problem</div>
+      <textarea class="finput" rows="3" id="bk-desc" style="resize:none" placeholder="Describe your problem in detail..."></textarea>
+      <div style="font-size:14px;font-weight:800;color:var(--text);margin:14px 0 8px" id="lbl-pay">Payment method</div>
+      <div class="pay-tile sel" id="tile-cash" onclick="selPay('cash')"><span style="font-size:22px">💵</span><div style="flex:1"><div style="font-size:14px;font-weight:800;color:var(--text)" id="lbl-cash">Cash</div><div style="font-size:11px;color:var(--sub)" id="sub-cash">Pay on arrival</div></div><div class="radio"><div class="rdot"></div></div></div>
+      <div class="pay-tile" id="tile-card" onclick="selPay('card')"><span style="font-size:22px">💳</span><div style="flex:1"><div style="font-size:14px;font-weight:800;color:var(--text)" id="lbl-card">Card</div><div style="font-size:11px;color:var(--sub)">Visa / Mastercard</div></div><div class="radio"><div class="rdot"></div></div></div>
+      <div class="pay-tile" id="tile-vf" onclick="selPay('vf')"><span style="font-size:22px">📱</span><div style="flex:1"><div style="font-size:14px;font-weight:800;color:var(--text)">Vodafone Cash</div><div style="font-size:11px;color:var(--sub)">Mobile wallet</div></div><div class="radio"><div class="rdot"></div></div></div>
+      <div class="pay-tile" id="tile-insta" onclick="selPay('insta')"><span style="font-size:22px">⚡</span><div style="flex:1"><div style="font-size:14px;font-weight:800;color:var(--text)">InstaPay</div><div style="font-size:11px;color:var(--sub)">Instant transfer</div></div><div class="radio"><div class="rdot"></div></div></div>
+      <div class="sum-card" style="margin-top:8px">
+        <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:12px" id="lbl-summary">Order Summary</div>
+        <div class="sum-r"><span class="l" id="lbl-svc">Service fee</span><span class="v" id="sum-svc">150 EGP</span></div>
+        <div class="sum-r"><span class="l" id="lbl-pfee">Platform fee</span><span class="v" id="sum-fee">15 EGP</span></div>
+        <div class="sum-tot"><span class="l" id="lbl-total">Total</span><span class="v" id="sum-tot">165 EGP</span></div>
+      </div>
+      <button class="btn-p" id="pay-btn" onclick="proceedPay()">💳 Pay Now · 165 EGP</button>
+      <button class="btn-o red" onclick="showScreen('home')" id="btn-cancel">Cancel</button>
+      <div style="height:24px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ OTP ═══ -->
+<div class="screen" id="screen-otp" style="align-items:center;padding:0 28px">
+  <div style="align-self:flex-start;margin-top:calc(44px + var(--safe-top))"><div class="back-btn" onclick="showScreen('booking')">‹</div></div>
+  <div style="width:80px;height:80px;border-radius:50%;background:rgba(41,121,255,.1);display:flex;align-items:center;justify-content:center;font-size:36px;margin-top:40px">🔐</div>
+  <div style="font-size:22px;font-weight:900;color:var(--text);margin-top:20px;text-align:center" id="lbl-verify">Verify Identity</div>
+  <div style="font-size:13px;color:var(--sub);margin-top:6px;text-align:center" id="lbl-verifysub">We sent a code to your number</div>
+  <div style="background:rgba(255,179,0,.12);color:var(--warning);padding:6px 14px;border-radius:8px;font-size:12px;font-weight:700;margin-top:8px">Demo code: 1234</div>
+  <div class="otp-boxes"><input class="otp-b" type="number" id="otp0" oninput="otpIn(0)"><input class="otp-b" type="number" id="otp1" oninput="otpIn(1)"><input class="otp-b" type="number" id="otp2" oninput="otpIn(2)"><input class="otp-b" type="number" id="otp3" oninput="otpIn(3)"></div>
+  <div id="otp-err" style="color:var(--error);font-size:13px;font-weight:700;margin-top:12px;display:none">Wrong code, try again ❌</div>
+  <button class="btn-p" id="otp-btn" onclick="verifyOtp()" style="margin-top:32px;width:100%">✅ <span id="lbl-verifyBtn">Verify</span></button>
+  <div style="font-size:13px;color:var(--sub);margin-top:16px">Didn't receive it? <span style="color:var(--primary);font-weight:700;cursor:pointer" onclick="showToast('📱 Code resent!')">Resend (<span id="otp-cd">30</span>s)</span></div>
+</div>
+
+<!-- ═══ SUCCESS ═══ -->
+<div class="screen" id="screen-success" style="align-items:center;justify-content:center;padding:28px">
+  <div class="suc-circle">✅</div>
+  <div style="font-size:22px;font-weight:900;margin-top:20px;color:var(--text);text-align:center" id="lbl-booked">Booking Confirmed!</div>
+  <div style="font-size:13px;color:var(--sub);margin-top:6px;text-align:center" id="lbl-bookedsub">The craftsman will contact you soon 🚀</div>
+  <div style="width:100%;margin-top:28px;background:var(--card);border:1px solid var(--border);border-radius:18px;padding:18px">
+    <div style="display:flex;justify-content:space-between;margin-bottom:10px"><span style="font-size:13px;color:var(--sub)" id="lbl-worker">Craftsman</span><span style="font-size:13px;font-weight:700;color:var(--text)" id="r-name">Ahmed</span></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:10px"><span style="font-size:13px;color:var(--sub)" id="lbl-service">Service</span><span style="font-size:13px;font-weight:700;color:var(--text)" id="r-prof">Plumber</span></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:10px"><span style="font-size:13px;color:var(--sub)" id="lbl-payment">Payment</span><span style="font-size:13px;font-weight:700;color:var(--text)" id="r-pay">Cash</span></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:10px"><span style="font-size:13px;color:var(--sub)" id="lbl-bookId">Booking #</span><span style="font-size:13px;font-weight:700;color:var(--text)" id="r-id">#A1B2C3</span></div>
+    <div style="display:flex;justify-content:space-between;padding-top:12px;border-top:1px solid var(--border)"><span style="font-size:16px;font-weight:900;color:var(--text)" id="lbl-tot2">Total</span><span style="font-size:20px;font-weight:900;color:var(--primary)" id="r-tot">165 EGP</span></div>
+  </div>
+  <button class="btn-p" style="margin-top:18px" onclick="showScreen('track')">📍 <span id="btn-track-lbl">Track Order</span></button>
+  <button class="btn-o" onclick="showScreen('home')" id="btn-home2">🏠 Home</button>
+</div>
+
+<!-- ═══ TRACK ═══ -->
+<div class="screen" id="screen-track">
+  <div class="appbar"><div class="back-btn" onclick="showScreen('bookings')">‹</div><span id="lbl-track">Track Order</span></div>
+  <div class="scroll-area">
+    <div style="height:160px;background:linear-gradient(135deg,rgba(41,121,255,.08),rgba(0,188,212,.06));border-radius:16px;margin:14px 16px 0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;border:1px solid var(--border);font-size:32px">🗺️<span style="font-size:13px;color:var(--sub)">Live tracking map</span></div>
+    <div style="margin:14px 16px 0;padding:14px;border-radius:16px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;gap:12px">
+      <div class="ava" style="width:52px;height:52px;font-size:22px;color:#2979FF;border-color:#2979FF;background:rgba(41,121,255,.12)" id="trk-ava">A</div>
+      <div style="flex:1"><div class="wc-name" id="trk-name">Ahmed</div><div class="wc-prof" style="font-size:11px" id="trk-eta">ETA ~15 minutes</div></div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button style="padding:8px 12px;border-radius:10px;border:1.5px solid var(--primary);background:none;color:var(--primary);font-size:12px;font-weight:800;cursor:pointer;font-family:inherit" onclick="showToast('📞 Calling...')">📞</button>
+        <button style="padding:8px 12px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit" onclick="openChat()">💬</button>
+      </div>
+    </div>
+    <div style="padding:20px 16px 0">
+      <div class="tl-item"><div class="tl-line"><div class="tl-circle done">✅</div><div class="tl-conn done"></div></div><div class="tl-text"><div class="tl-label done" id="tl1">Booking Confirmed</div><div class="tl-sub">2:30 PM</div></div></div>
+      <div class="tl-item"><div class="tl-line"><div class="tl-circle done" style="animation:pulse 2s infinite">🚶</div><div class="tl-conn"></div></div><div class="tl-text"><div class="tl-label done" id="tl2">Craftsman on the way</div><div class="tl-sub">Now · 2:45 PM</div></div></div>
+      <div class="tl-item"><div class="tl-line"><div class="tl-circle">📍</div><div class="tl-conn"></div></div><div class="tl-text"><div class="tl-label" id="tl3">Craftsman Arrived</div><div class="tl-sub">ETA 3:00 PM</div></div></div>
+      <div class="tl-item"><div class="tl-line"><div class="tl-circle">🎉</div></div><div class="tl-text"><div class="tl-label" id="tl4">Service Completed</div><div class="tl-sub">ETA 4:30 PM</div></div></div>
+    </div>
+    <div style="height:24px"></div>
+  </div>
+</div>
+
+<!-- ═══ CHAT ═══ -->
+<div class="screen" id="screen-chat">
+  <div class="appbar">
+    <div class="back-btn" onclick="showScreen('track')">‹</div>
+    <div class="ava" id="chat-ava" style="width:36px;height:36px;font-size:15px;color:#2979FF;border-color:#2979FF;background:rgba(41,121,255,.12)">A</div>
+    <div style="flex:1"><div style="font-size:15px;font-weight:800;color:var(--text)" id="chat-name">Ahmed</div><div style="font-size:11px;color:var(--success)">🟢 Online</div></div>
+  </div>
+  <div class="chat-msgs" id="chat-msgs"></div>
+  <div class="chat-input-bar">
+    <input type="text" id="chat-inp" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendMsg()">
+    <button class="chat-send" onclick="sendMsg()">➤</button>
+  </div>
+</div>
+
+<!-- ═══ BOOKINGS ═══ -->
+<div class="screen" id="screen-bookings">
+  <div style="background:var(--card);border-bottom:1px solid var(--border);padding:calc(44px + var(--safe-top)) 20px 16px;font-size:20px;font-weight:900;color:var(--text);flex-shrink:0" id="lbl-mybooks">📋 My Bookings</div>
+  <div class="scroll-area">
+    <div style="height:12px"></div>
+    <div id="bookings-list"><div class="loader"><div class="spinner"></div></div></div>
+    <div style="height:20px"></div>
+  </div>
+  <div class="bnav">
+    <div class="ni" onclick="showScreen('home')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span id="nav-home-lbl2">Home</span></div>
+    <div class="ni active"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span id="nav-book-lbl2">Bookings</span><div class="ndot"></div></div>
+    <div class="ni" onclick="showScreen('profile')"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span id="nav-prof-lbl2">Profile</span></div>
+  </div>
+</div>
+
+<!-- ═══ PROFILE ═══ -->
+<div class="screen" id="screen-profile">
+  <div class="prof-hdr">
+    <div class="prof-ava" id="prof-ava">A</div>
+    <div style="font-size:20px;font-weight:900;color:var(--text)" id="prof-name">User</div>
+    <div style="font-size:13px;color:var(--sub);margin-top:4px" id="prof-email">user@email.com</div>
+    <div class="prof-stats">
+      <div class="ps"><div class="ps-v" id="ps-total">0</div><div class="ps-l" id="lbl-psbook">Bookings</div></div>
+      <div class="ps"><div class="ps-v" id="ps-done">0</div><div class="ps-l" id="lbl-psdone">Completed</div></div>
+      <div class="ps"><div class="ps-v" id="ps-rat">5.0</div><div class="ps-l" id="lbl-psrat">Rating</div></div>
+    </div>
+  </div>
+  <div class="scroll-area">
+    <div style="padding:16px">
+      <div class="set-item" onclick="showLocModal()"><div class="set-icon" style="background:rgba(41,121,255,.1)">📍</div><div style="flex:1;font-size:14px;font-weight:700;color:var(--text)" id="lbl-setloc">My Location</div><div style="color:var(--sub);font-size:12px" id="set-loc-val">Cairo</div><div style="color:var(--sub)">›</div></div>
+      <div class="set-item" onclick="toggleLang()"><div class="set-icon" style="background:rgba(0,200,83,.1)">🌐</div><div style="flex:1;font-size:14px;font-weight:700;color:var(--text)" id="lbl-setlang">Language</div><div style="color:var(--sub);font-size:12px" id="cur-lang">English</div><div style="color:var(--sub)">›</div></div>
+      <div class="set-item" onclick="toggleDark()"><div class="set-icon" style="background:rgba(100,100,200,.1)">🌙</div><div style="flex:1;font-size:14px;font-weight:700;color:var(--text)" id="lbl-setdark">Dark Mode</div><div style="color:var(--sub)">›</div></div>
+      <div class="set-item" id="install-set" style="display:none" onclick="installPWA()"><div class="set-icon" style="background:rgba(41,121,255,.1)">📲</div><div style="flex:1;font-size:14px;font-weight:700;color:var(--text)" id="lbl-install">Install App</div><div style="color:var(--sub)">›</div></div>
+      <div class="set-item" onclick="showToast('🔔 Coming soon!')"><div class="set-icon" style="background:rgba(255,179,0,.1)">🔔</div><div style="flex:1;font-size:14px;font-weight:700;color:var(--text)" id="lbl-notif">Notifications</div><div style="color:var(--sub)">›</div></div>
+      <div class="set-item" onclick="logout()" style="border-color:rgba(255,23,68,.2)"><div class="set-icon" style="background:rgba(255,23,68,.1)">🚪</div><div style="flex:1;font-size:14px;font-weight:700;color:var(--error)" id="lbl-logout">Logout</div><div style="color:var(--error)">›</div></div>
+    </div>
+  </div>
+  <div class="bnav">
+    <div class="ni" onclick="showScreen('home')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span id="nav-home-lbl3">Home</span></div>
+    <div class="ni" onclick="showScreen('bookings')" style="position:relative"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span id="nav-book-lbl3">Bookings</span><div class="nbadge">0</div></div>
+    <div class="ni active"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span id="nav-prof-lbl3">Profile</span><div class="ndot"></div></div>
+  </div>
+</div>
+
+<!-- ═══ LOCATION MODAL ═══ -->
+<div class="loc-modal" id="loc-modal" onclick="if(event.target===this)closeLocModal()">
+  <div class="loc-sheet">
+    <div style="font-size:17px;font-weight:900;color:var(--text);margin-bottom:14px" id="lbl-pickLoc">📍 Choose Location</div>
+    <div class="loc-map-fake" onclick="getGPSLocation()">
+      🗺️
+      <span style="font-size:13px;color:var(--sub)" id="lbl-useGPS">Tap to use current location (GPS)</span>
+    </div>
+    <div style="font-size:12px;font-weight:800;color:var(--sub);margin-bottom:8px" id="lbl-orPick">Or choose area</div>
+    <div class="loc-presets" id="loc-presets">
+      <div class="loc-preset sel" onclick="pickLoc(this,'Maadi, Cairo')">📍 Maadi, Cairo</div>
+      <div class="loc-preset" onclick="pickLoc(this,'Zamalek, Cairo')">📍 Zamalek, Cairo</div>
+      <div class="loc-preset" onclick="pickLoc(this,'Heliopolis, Cairo')">📍 Heliopolis, Cairo</div>
+      <div class="loc-preset" onclick="pickLoc(this,'Nasr City, Cairo')">📍 Nasr City, Cairo</div>
+      <div class="loc-preset" onclick="pickLoc(this,'October City, Giza')">📍 October City, Giza</div>
+      <div class="loc-preset" onclick="pickLoc(this,'Alexandria')">📍 Alexandria</div>
+    </div>
+    <button class="btn-p" onclick="closeLocModal()" id="lbl-confirmLoc">Confirm Location</button>
+  </div>
+</div>
+
+</div><!-- #app -->
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════
+const S = {
+  token: localStorage.getItem('harfi_token') || null,
+  user: JSON.parse(localStorage.getItem('harfi_user') || 'null'),
+  worker: null,
+  payment: 'cash',
+  dark: localStorage.getItem('harfi_dark') === 'true',
+  lang: localStorage.getItem('harfi_lang') || 'en',
+  location: localStorage.getItem('harfi_loc') || 'Cairo, Egypt',
+  sort: 'distance',
+  cat: 'Plumbing',
+  lastBooking: null,
+  chatBookingId: null,
+  deferredPrompt: null,
+  isRegister: false,
+};
+
+const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? `${window.location.origin}/api` : '/api';
+
+// ══════════════════════════════════════════
+//  TRANSLATIONS
+// ══════════════════════════════════════════
+const T = {
+  en: {
+    home:'Home',bookings:'Bookings',profile:'Profile',services:'Services',nearest:'Nearest',topRated:'Top Rated',available:'Available',
+    about:'About',call:'Call',bookNow:'Book Now',descProblem:'Describe the problem',payMethod:'Payment method',
+    cash:'Cash',payArrival:'Pay on arrival',card:'Card',summary:'Order Summary',svcFee:'Service fee',
+    platFee:'Platform fee',total:'Total',cancel:'Cancel',verify:'Verify Identity',verifySub:'We sent a code to your number',
+    verifyBtn:'Verify',booked:'Booking Confirmed!',bookedSub:'The craftsman will contact you soon 🚀',
+    workerLbl:'Craftsman',service:'Service',payment:'Payment',bookId:'Booking #',
+    trackOrder:'Track Order',track:'Track Order',myBookings:'📋 My Bookings',
+    myLoc:'My Location',language:'Language',darkMode:'Dark Mode',installApp:'Install App',notifications:'Notifications',logout:'Logout',
+    pickLoc:'📍 Choose Location',useGPS:'Tap to use current location (GPS)',orPick:'Or choose area',confirmLoc:'Confirm Location',
+    jobs:'jobs',yrsExp:'yrs exp',reviews:'reviews',greeting:'Good morning 👋',
+    loginTitle:'Welcome to Harfi',loginSub:'Book certified craftsmen instantly',
+    login:'Login',signup:'Sign Up',noAccount:"Don't have an account?",hasAccount:'Already have an account?',
+    fullName:'Full Name',email:'Email',phone:'Phone',password:'Password',demo:'Try Demo Account',
+    typeMsg:'Type a message...',etaMin:'ETA ~15 minutes',online:'Online',curLang:'English',
+    tl1:'Booking Confirmed',tl2:'Craftsman on the way',tl3:'Craftsman Arrived',tl4:'Service Completed',
+  },
+  ar: {
+    home:'الرئيسية',bookings:'حجوزاتي',profile:'حسابي',services:'الخدمات',nearest:'الأقرب',topRated:'الأعلى تقييماً',available:'متاح الآن',
+    about:'نبذة',call:'اتصال',bookNow:'احجز الآن',descProblem:'وصف المشكلة',payMethod:'طريقة الدفع',
+    cash:'كاش',payArrival:'ادفع عند الوصول',card:'كارت',summary:'ملخص الطلب',svcFee:'رسوم الخدمة',
+    platFee:'رسوم المنصة',total:'الإجمالي',cancel:'إلغاء',verify:'التحقق من الهوية',verifySub:'أرسلنا كود على رقمك',
+    verifyBtn:'تحقق',booked:'تم الحجز بنجاح!',bookedSub:'الحرفي هيكون عندك قريباً 🚀',
+    workerLbl:'الحرفي',service:'الخدمة',payment:'الدفع',bookId:'رقم الحجز',
+    trackOrder:'تتبع الطلب',track:'تتبع الطلب',myBookings:'📋 حجوزاتي',
+    myLoc:'موقعي',language:'اللغة',darkMode:'الوضع الداكن',installApp:'تثبيت التطبيق',notifications:'الإشعارات',logout:'تسجيل الخروج',
+    pickLoc:'📍 اختار موقعك',useGPS:'اضغط لاستخدام موقعك الحالي (GPS)',orPick:'أو اختار المنطقة',confirmLoc:'تأكيد الموقع',
+    jobs:'شغلة',yrsExp:'سنة خبرة',reviews:'تقييم',greeting:'صباح الخير 👋',
+    loginTitle:'أهلاً بك في حرفي',loginSub:'احجز حرفيك المعتمد في ثواني',
+    login:'تسجيل الدخول',signup:'إنشاء حساب',noAccount:'ليس لديك حساب؟',hasAccount:'لديك حساب؟',
+    fullName:'الاسم الكامل',email:'البريد الإلكتروني',phone:'رقم الهاتف',password:'كلمة المرور',demo:'جرّب الحساب التجريبي',
+    typeMsg:'اكتب رسالة...',etaMin:'وصولك خلال ~15 دقيقة',online:'متصل',curLang:'العربية',
+    tl1:'تم تأكيد الحجز',tl2:'الحرفي في الطريق',tl3:'وصل الحرفي',tl4:'اكتملت الخدمة',
+  }
+};
+
+function t(key) { return T[S.lang][key] || T.en[key] || key; }
+
+// ══════════════════════════════════════════
+//  APPLY TRANSLATIONS
+// ══════════════════════════════════════════
+const labelMap = {
+  'nav-home-lbl':'home','nav-home-lbl2':'home','nav-home-lbl3':'home',
+  'nav-book-lbl':'bookings','nav-book-lbl2':'bookings','nav-book-lbl3':'bookings',
+  'nav-prof-lbl':'profile','nav-prof-lbl2':'profile','nav-prof-lbl3':'profile',
+  'lbl-cats':'services','tab-nearest':'nearest','tab-top':'topRated','tab-avail':'available',
+  'lbl-about':'about','btn-call-lbl':'call','btn-book-lbl':'bookNow','lbl-bookNow':'bookNow',
+  'lbl-desc':'descProblem','lbl-pay':'payMethod','lbl-cash':'cash','sub-cash':'payArrival','lbl-card':'card',
+  'lbl-summary':'summary','lbl-svc':'svcFee','lbl-pfee':'platFee','lbl-total':'total','btn-cancel':'cancel',
+  'lbl-verify':'verify','lbl-verifysub':'verifySub','lbl-verifyBtn':'verifyBtn',
+  'lbl-booked':'booked','lbl-bookedsub':'bookedSub',
+  'lbl-worker':'workerLbl','lbl-service':'service','lbl-payment':'payment','lbl-bookId':'bookId',
+  'btn-track-lbl':'trackOrder','lbl-track':'track','btn-home2':'home',
+  'lbl-mybooks':'myBookings','lbl-psbook':'bookings','lbl-psdone':'profile','lbl-psrat':'profile',
+  'lbl-setloc':'myLoc','lbl-setlang':'language','lbl-setdark':'darkMode','lbl-install':'installApp',
+  'lbl-notif':'notifications','lbl-logout':'logout',
+  'lbl-pickLoc':'pickLoc','lbl-useGPS':'useGPS','lbl-orPick':'orPick','lbl-confirmLoc':'confirmLoc',
+  'lbl-jobs':'jobs','lbl-yrs':'yrsExp','home-greeting':'greeting',
+  'auth-title':'loginTitle','auth-sub':'loginSub','cur-lang':'curLang',
+  'tl1':'tl1','tl2':'tl2','tl3':'tl3','tl4':'tl4',
+};
+
+function applyLang() {
+  const isAr = S.lang === 'ar';
+  document.documentElement.lang = S.lang;
+  document.documentElement.dir = isAr ? 'rtl' : 'ltr';
+  document.body.classList.toggle('ar', isAr);
+  document.getElementById('lang-btn').textContent = isAr ? 'EN' : 'ع';
+  document.getElementById('cur-lang').textContent = t('curLang');
+
+  for (const [id, key] of Object.entries(labelMap)) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = t(key);
+  }
+
+  // Auth form
+  document.getElementById('auth-btn').textContent = S.isRegister ? t('signup') : t('login');
+  document.getElementById('auth-switch').innerHTML = S.isRegister
+    ? `${t('hasAccount')} <b onclick="toggleAuthMode()">${t('login')}</b>`
+    : `${t('noAccount')} <b onclick="toggleAuthMode()">${t('signup')}</b>`;
+  document.querySelectorAll('.finput[placeholder]').forEach(inp => {
+    if (inp.id === 'inp-name') inp.placeholder = t('fullName');
+    if (inp.id === 'inp-email') inp.placeholder = t('email');
+    if (inp.id === 'inp-phone') inp.placeholder = t('phone');
+    if (inp.id === 'inp-pass') inp.placeholder = t('password');
+    if (inp.id === 'chat-inp') inp.placeholder = t('typeMsg');
+    if (inp.id === 'srch-inp') inp.placeholder = isAr ? 'ابحث عن خدمة...' : 'Search for a service...';
+    if (inp.id === 'bk-desc') inp.placeholder = isAr ? 'وصف مشكلتك بالتفصيل...' : 'Describe your problem in detail...';
+  });
+  // Worker card names
+  renderWorkers(window._lastWorkers || []);
+}
+
+function toggleLang() {
+  S.lang = S.lang === 'en' ? 'ar' : 'en';
+  localStorage.setItem('harfi_lang', S.lang);
+  applyLang();
+}
+
+// ══════════════════════════════════════════
+//  DARK MODE
+// ══════════════════════════════════════════
+function toggleDark() {
+  S.dark = !S.dark;
+  document.body.classList.toggle('dark', S.dark);
+  document.getElementById('dark-btn').textContent = S.dark ? '☀️' : '🌙';
+  localStorage.setItem('harfi_dark', S.dark);
+}
+
+// ══════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════
+let _tt;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(_tt);
+  _tt = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+// ══════════════════════════════════════════
+//  SCREEN NAV
+// ══════════════════════════════════════════
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  if (name === 'home') loadWorkers();
+  if (name === 'bookings') loadBookings();
+  if (name === 'profile') loadProfile();
+  history.pushState({ screen: name }, '', `?s=${name}`);
+}
+
+window.addEventListener('popstate', e => {
+  const s = e.state?.screen || 'home';
+  document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+  document.getElementById('screen-' + s)?.classList.add('active');
+});
+
+// ══════════════════════════════════════════
+//  AUTH
+// ══════════════════════════════════════════
+function toggleAuthMode() {
+  S.isRegister = !S.isRegister;
+  document.getElementById('fg-name').style.display = S.isRegister ? 'block' : 'none';
+  document.getElementById('fg-phone').style.display = S.isRegister ? 'block' : 'none';
+  document.getElementById('auth-title').textContent = S.isRegister ? t('signup') : t('loginTitle');
+  document.getElementById('auth-btn').textContent = S.isRegister ? t('signup') : t('login');
+  document.getElementById('auth-switch').innerHTML = S.isRegister
+    ? `${t('hasAccount')} <b onclick="toggleAuthMode()">${t('login')}</b>`
+    : `${t('noAccount')} <b onclick="toggleAuthMode()">${t('signup')}</b>`;
+  document.getElementById('auth-error').style.display = 'none';
+}
+
+async function submitAuth() {
+  const email = document.getElementById('inp-email').value.trim();
+  const password = document.getElementById('inp-pass').value.trim();
+  const errEl = document.getElementById('auth-error');
+  const btn = document.getElementById('auth-btn');
+
+  if (!email || !password) { showAuthErr(S.lang === 'ar' ? 'ادخل البيانات كاملة' : 'Please fill all fields'); return; }
+
+  btn.textContent = '⏳...';
+  btn.disabled = true;
+
+  try {
+    let body = { email, password };
+    let url = `${API}/auth/login`;
+    if (S.isRegister) {
+      const name = document.getElementById('inp-name').value.trim();
+      const phone = document.getElementById('inp-phone').value.trim();
+      if (!name) { showAuthErr(S.lang === 'ar' ? 'ادخل اسمك' : 'Enter your name'); btn.disabled = false; btn.textContent = t('signup'); return; }
+      body = { name, email, password, phone };
+      url = `${API}/auth/register`;
+    }
+    const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+    const data = await res.json();
+
+    if (data.success) {
+      S.token = data.token;
+      S.user = data.user;
+      localStorage.setItem('harfi_token', data.token);
+      localStorage.setItem('harfi_user', JSON.stringify(data.user));
+      showScreen('home');
+      showToast(S.lang === 'ar' ? '🎉 أهلاً بك!' : '🎉 Welcome!');
+    } else {
+      showAuthErr(data.message);
+    }
+  } catch(e) {
+    showAuthErr(S.lang === 'ar' ? '📵 تحقق من الاتصال' : '📵 Check your connection');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = S.isRegister ? t('signup') : t('login');
+  }
+}
+
+async function demoLogin() {
+  document.getElementById('inp-email').value = 'demo@harfi.app';
+  document.getElementById('inp-pass').value = 'demo1234';
+  await submitAuth();
+}
+
+function showAuthErr(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function logout() {
+  fetch(`${API}/auth/logout`, { method:'POST', headers:{ Authorization:`Bearer ${S.token}` } });
+  S.token = null; S.user = null;
+  localStorage.removeItem('harfi_token');
+  localStorage.removeItem('harfi_user');
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-auth').classList.add('active');
+  showToast(S.lang === 'ar' ? 'تم تسجيل الخروج' : 'Logged out');
+}
+
+// ══════════════════════════════════════════
+//  WORKERS
+// ══════════════════════════════════════════
+async function loadWorkers() {
+  document.getElementById('workers-list').innerHTML = '<div class="loader"><div class="spinner"></div></div>';
+  const params = new URLSearchParams({ category: S.cat });
+  if (S.sort === 'rating') params.set('sort','rating');
+  else if (S.sort === 'distance') params.set('sort','distance');
+  else if (S.sort === 'online') params.set('status','online');
+
+  try {
+    const res = await fetch(`${API}/workers?${params}`);
+    const data = await res.json();
+    window._lastWorkers = data.data || [];
+    renderWorkers(window._lastWorkers);
+  } catch(e) {
+    document.getElementById('workers-list').innerHTML = `<div class="loader"><span style="color:var(--sub);font-size:13px">📵 ${S.lang==='ar'?'تحقق من الاتصال':'Check connection'}</span></div>`;
+  }
+}
+
+function renderWorkers(workers) {
+  const el = document.getElementById('workers-list');
+  if (!workers.length) { el.innerHTML = `<div class="loader"><span style="color:var(--sub);font-size:13px">${S.lang==='ar'?'لا يوجد حرفيين':'No craftsmen found'}</span></div>`; return; }
+  const isAr = S.lang === 'ar';
+  el.innerHTML = workers.map(w => `
+    <div class="wcard" onclick="openWorker('${w.id}')">
+      <div class="wc-top">
+        <div class="ava" style="width:54px;height:54px;background:${w.color}22;color:${w.color};border-color:${w.color};font-size:22px">${w.avatar}</div>
+        <div class="wc-info">
+          <div class="wc-name">${isAr ? w.nameAr : w.name}</div>
+          <div class="wc-prof">${isAr ? w.profAr : w.profession}</div>
+          <div class="stars">⭐⭐⭐⭐⭐ <span style="font-size:11px;color:var(--sub);margin-right:4px">${w.rating} (${w.reviews})</span></div>
+        </div>
+        <div class="badge ${w.status}"><div class="dot"></div>${w.status==='online'?(isAr?'متاح':'Online'):(isAr?'مشغول':'Busy')}</div>
+      </div>
+      <div class="wc-meta">
+        <div class="meta-c">📍 ${w.dist} km</div>
+        <div class="meta-c">🔧 ${w.jobs} ${isAr?'شغلة':'jobs'}</div>
+        <div class="meta-c" style="color:var(--primary);font-weight:800">${w.price} EGP/hr</div>
+      </div>
+      <div class="wc-bot">
+        <button class="btn-call" onclick="event.stopPropagation();showToast('📞 ${isAr?'جاري الاتصال...':'Calling...'}')">${isAr?'📞 اتصال':'📞 Call'}</button>
+        <button class="btn-book" style="background:${w.color}" onclick="event.stopPropagation();openWorker('${w.id}',true)">${isAr?'📅 احجز':'📅 Book'}</button>
+      </div>
+    </div>`).join('');
+}
+
+async function openWorker(id, goBook=false) {
+  try {
+    const res = await fetch(`${API}/workers/${id}`);
+    const data = await res.json();
+    const w = data.data;
+    S.worker = w;
+    const isAr = S.lang === 'ar';
+
+    document.getElementById('det-hdr').style.background = `linear-gradient(135deg,${w.color}30,${w.color}10)`;
+    document.getElementById('det-ava').style.cssText = `width:80px;height:80px;font-size:32px;background:${w.color}22;color:${w.color};border-color:${w.color}`;
+    document.getElementById('det-ava').textContent = w.avatar;
+    document.getElementById('det-name').textContent = isAr ? w.nameAr : w.name;
+    document.getElementById('det-prof').textContent = isAr ? w.profAr : w.profession;
+    document.getElementById('ds-rating').textContent = w.rating;
+    document.getElementById('ds-rev').textContent = `${w.reviews} ${t('reviews')}`;
+    document.getElementById('ds-jobs').textContent = w.jobs;
+    document.getElementById('ds-exp').textContent = w.exp;
+    document.getElementById('det-price').textContent = `${w.price} EGP/hr`;
+
+    const sb = document.getElementById('det-status');
+    sb.className = `badge ${w.status}`;
+    sb.innerHTML = `<div class="dot"></div>${w.status==='online'?(isAr?'متاح الآن':'Available'):(isAr?'مشغول':'Busy')}`;
+    document.getElementById('det-desc').textContent = `${isAr?'خبرة':'Experience'} ${w.exp} ${isAr?'سنوات في':'years in'} ${isAr?w.categoryAr:w.category}. ${w.jobs} ${isAr?'شغلة منجزة.':'jobs completed.'}`;
+    document.getElementById('det-book-btn').style.background = w.color;
+
+    // Fill booking
+    document.getElementById('b-ava').textContent = w.avatar;
+    document.getElementById('b-ava').style.cssText = `width:50px;height:50px;font-size:20px;color:${w.color};border-color:${w.color};background:${w.color}22`;
+    document.getElementById('b-name').textContent = isAr ? w.nameAr : w.name;
+    document.getElementById('b-prof').textContent = `${isAr?w.profAr:w.profession} · ⭐ ${w.rating}`;
+    document.getElementById('b-price').textContent = w.price;
+    const fee = Math.round(w.price * 0.1);
+    const tot = w.price + fee;
+    document.getElementById('sum-svc').textContent = `${w.price} EGP`;
+    document.getElementById('sum-fee').textContent = `${fee} EGP`;
+    document.getElementById('sum-tot').textContent = `${tot} EGP`;
+    document.getElementById('pay-btn').textContent = `💳 ${isAr?'ادفع دلوقتي':'Pay Now'} · ${tot} EGP`;
+
+    showScreen(goBook ? 'booking' : 'detail');
+  } catch(e) { showToast('⚠️ Error loading worker'); }
+}
+
+function selectCat(el) {
+  document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('sel'));
+  el.classList.add('sel');
+  S.cat = el.dataset.cat;
+  loadWorkers();
+}
+
+function setSort(el, type) {
+  document.querySelectorAll('.tab-i').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  S.sort = type;
+  loadWorkers();
+}
+
+let _sd;
+async function handleSearch(q) {
+  clearTimeout(_sd);
+  if (!q) { loadWorkers(); return; }
+  _sd = setTimeout(async () => {
+    try {
+      const res = await fetch(`${API}/search?q=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      window._lastWorkers = data.data || [];
+      renderWorkers(window._lastWorkers);
+    } catch(e) {}
+  }, 400);
+}
+
+// ══════════════════════════════════════════
+//  PAYMENT
+// ══════════════════════════════════════════
+function selPay(type) {
+  ['cash','card','vf','insta'].forEach(t => document.getElementById('tile-'+t)?.classList.remove('sel'));
+  document.getElementById('tile-'+type)?.classList.add('sel');
+  S.payment = type;
+  const w = S.worker;
+  const tot = w ? w.price + Math.round(w.price*.1) : 165;
+  const labels = {cash:S.lang==='ar'?'تأكيد الحجز':'Confirm Booking',card:S.lang==='ar'?'ادفع بالكارت':'Pay by Card',vf:'Vodafone Cash',insta:'InstaPay'};
+  document.getElementById('pay-btn').textContent = `💳 ${labels[type]} · ${tot} EGP`;
+}
+
+async function proceedPay() {
+  if (!S.token) { showToast('Please login first'); return; }
+  if (S.payment === 'cash') await createBooking();
+  else showScreen('otp');
+}
+
+async function createBooking() {
+  const w = S.worker;
+  try {
+    const res = await fetch(`${API}/bookings`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${S.token}`},
+      body:JSON.stringify({ workerId:w.id, description:document.getElementById('bk-desc').value, payment:S.payment, location:S.location }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      S.lastBooking = data.data;
+      fillSuccess(data.data);
+      showScreen('success');
+      showToast(S.lang==='ar'?'🎉 تم الحجز بنجاح!':'🎉 Booking confirmed!');
+      // Update badge
+      const b = (parseInt(document.getElementById('badge-h')?.textContent||0)+1).toString();
+      document.querySelectorAll('.nbadge').forEach(el=>el.textContent=b);
+    } else { showToast(data.message || 'Booking failed'); }
+  } catch(e) { showToast('📵 Connection error'); }
+}
+
+function fillSuccess(b) {
+  document.getElementById('r-name').textContent = S.lang==='ar' ? b.workerNameAr||b.workerName : b.workerName;
+  document.getElementById('r-prof').textContent = S.lang==='ar' ? b.professionAr||b.profession : b.profession;
+  document.getElementById('r-pay').textContent = b.payment;
+  document.getElementById('r-id').textContent = '#' + b.id;
+  document.getElementById('r-tot').textContent = b.amount + ' EGP';
+  // Tracking worker info
+  document.getElementById('trk-ava').textContent = b.avatar;
+  document.getElementById('trk-name').textContent = S.lang==='ar' ? b.workerNameAr||b.workerName : b.workerName;
+  document.getElementById('trk-eta').textContent = t('etaMin');
+  document.getElementById('chat-ava').textContent = b.avatar;
+  document.getElementById('chat-name').textContent = S.lang==='ar' ? b.workerNameAr||b.workerName : b.workerName;
+  S.chatBookingId = b.id;
+}
+
+// ══════════════════════════════════════════
+//  OTP
+// ══════════════════════════════════════════
+let _otp;
+function startOtpTimer() {
+  let s=30; clearInterval(_otp);
+  document.getElementById('otp-cd').textContent = s;
+  _otp = setInterval(()=>{ s--; const el=document.getElementById('otp-cd'); if(el)el.textContent=s; if(s<=0)clearInterval(_otp); },1000);
+}
+function otpIn(i) {
+  const b = document.getElementById('otp'+i);
+  b.value = b.value.replace(/\D/g,'').slice(-1);
+  b.classList.toggle('filled',b.value.length>0);
+  if(b.value && i<3) document.getElementById('otp'+(i+1)).focus();
+  const code = [0,1,2,3].map(n=>document.getElementById('otp'+n).value).join('');
+  if(code.length===4) setTimeout(verifyOtp,300);
+}
+async function verifyOtp() {
+  const code = [0,1,2,3].map(n=>document.getElementById('otp'+n).value).join('');
+  const btn = document.getElementById('otp-btn');
+  btn.textContent='⏳'; btn.disabled=true;
+  try {
+    const res = await fetch(`${API}/verify-otp`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({otp:code})});
+    const data = await res.json();
+    if(data.success){ document.getElementById('otp-err').style.display='none'; clearOtp(); await createBooking(); }
+    else{ document.getElementById('otp-err').style.display='block'; clearOtp(); document.getElementById('otp0').focus(); }
+  } catch(e){showToast('Error');}
+  finally{ btn.textContent=t('verifyBtn'); btn.disabled=false; }
+}
+function clearOtp(){ [0,1,2,3].forEach(n=>{const b=document.getElementById('otp'+n);b.value='';b.classList.remove('filled')}); }
+
+// ══════════════════════════════════════════
+//  CHAT
+// ══════════════════════════════════════════
+let _chatPoll;
+async function openChat() {
+  showScreen('chat');
+  await loadMessages();
+  clearInterval(_chatPoll);
+  _chatPoll = setInterval(loadMessages, 3000);
+}
+async function loadMessages() {
+  if (!S.chatBookingId || !S.token) return;
+  try {
+    const res = await fetch(`${API}/bookings/${S.chatBookingId}/messages`,{headers:{Authorization:`Bearer ${S.token}`}});
+    const data = await res.json();
+    if(data.success) renderMessages(data.data);
+  } catch(e){}
+}
+function renderMessages(msgs) {
+  const el = document.getElementById('chat-msgs');
+  el.innerHTML = msgs.map(m=>{
+    const time = new Date(m.time).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    return `<div class="msg-wrap ${m.from}"><div class="msg-bubble">${m.text}</div><div class="msg-time">${time}</div></div>`;
+  }).join('');
+  el.scrollTop = el.scrollHeight;
+}
+async function sendMsg() {
+  const inp = document.getElementById('chat-inp');
+  const text = inp.value.trim();
+  if(!text || !S.chatBookingId || !S.token) return;
+  inp.value = '';
+  try {
+    await fetch(`${API}/bookings/${S.chatBookingId}/messages`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${S.token}`},body:JSON.stringify({text})});
+    await loadMessages();
+    setTimeout(loadMessages, 2200);
+  } catch(e){showToast('Send failed');}
+}
+
+// ══════════════════════════════════════════
+//  BOOKINGS LIST
+// ══════════════════════════════════════════
+async function loadBookings() {
+  if(!S.token){ document.getElementById('bookings-list').innerHTML=`<div class="loader"><span style="color:var(--sub);font-size:13px">${S.lang==='ar'?'سجل دخولك أولاً':'Please login first'}</span></div>`; return; }
+  document.getElementById('bookings-list').innerHTML='<div class="loader"><div class="spinner"></div></div>';
+  try {
+    const res = await fetch(`${API}/bookings`,{headers:{Authorization:`Bearer ${S.token}`}});
+    const data = await res.json();
+    renderBookings(data.data||[]);
+  } catch(e){ document.getElementById('bookings-list').innerHTML=`<div class="loader"><span style="color:var(--sub)">📵</span></div>`; }
+}
+const stMap = {
+  confirmed:{lbl:S=>S.lang==='ar'?'✓ مؤكد':'✓ Confirmed',box:'rgba(0,200,83,.12)'},
+  on_way:{lbl:S=>S.lang==='ar'?'🚶 في الطريق':'🚶 On the way',box:'rgba(41,121,255,.12)'},
+  completed:{lbl:S=>S.lang==='ar'?'🎉 مكتمل':'🎉 Completed',box:'rgba(0,137,123,.12)'},
+};
+function renderBookings(list) {
+  const el = document.getElementById('bookings-list');
+  if(!list.length){ el.innerHTML=`<div class="loader"><span style="color:var(--sub);font-size:13px">${S.lang==='ar'?'لا توجد حجوزات':'No bookings yet'}</span></div>`; return; }
+  el.innerHTML = list.map(b=>{
+    const st = stMap[b.status] || stMap.confirmed;
+    const isAr = S.lang==='ar';
+    const isActive = b.status==='on_way'||b.status==='confirmed';
+    return `<div class="bli ${isActive?'active-b':''}" style="${isActive?'border-color:rgba(41,121,255,.35)':''}">
+      <div class="bli-top">
+        <div class="ava" style="width:48px;height:48px;font-size:20px;color:${b.color};border-color:${b.color};background:${b.color}22">${b.avatar}</div>
+        <div style="flex:1"><div class="wc-name">${isAr?b.workerNameAr||b.workerName:b.workerName}</div><div class="wc-prof" style="font-size:11px">${isAr?b.professionAr||b.profession:b.profession}</div></div>
+        <div class="badge" style="background:${st.box};color:var(--text)">${st.lbl(S)}</div>
+      </div>
+      <div class="bli-meta"><span>💵</span><span>${b.amount} EGP</span><span class="bli-id">#${b.id}</span></div>
+      <div class="bli-bot">
+        <button class="bli-btn fill" onclick="openChatFromBooking('${b.id}','${b.workerName}','${b.workerNameAr||b.workerName}','${b.avatar}')">💬 ${isAr?'دردشة':'Chat'}</button>
+        ${isActive?`<button class="bli-btn" onclick="showScreen('track')">📍 ${isAr?'تتبع':'Track'}</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openChatFromBooking(bookingId, name, nameAr, avatar) {
+  S.chatBookingId = bookingId;
+  document.getElementById('chat-ava').textContent = avatar;
+  document.getElementById('chat-name').textContent = S.lang==='ar'?nameAr:name;
+  openChat();
+}
+
+// ══════════════════════════════════════════
+//  PROFILE
+// ══════════════════════════════════════════
+async function loadProfile() {
+  if(!S.token||!S.user){ return; }
+  try {
+    const res = await fetch(`${API}/user`,{headers:{Authorization:`Bearer ${S.token}`}});
+    const data = await res.json();
+    const u = data.data;
+    S.user = u;
+    localStorage.setItem('harfi_user',JSON.stringify(u));
+    document.getElementById('prof-ava').textContent = u.avatar||u.name[0];
+    document.getElementById('prof-name').textContent = u.name;
+    document.getElementById('prof-email').textContent = u.email;
+    document.getElementById('ps-total').textContent = u.bookings||0;
+    document.getElementById('ps-done').textContent = u.completed||0;
+    document.getElementById('ps-rat').textContent = u.rating||'5.0';
+    document.getElementById('set-loc-val').textContent = (u.location||S.location).split(',')[0];
+  } catch(e){}
+}
+
+// ══════════════════════════════════════════
+//  LOCATION
+// ══════════════════════════════════════════
+function showLocModal() { document.getElementById('loc-modal').classList.add('show'); }
+function closeLocModal() { document.getElementById('loc-modal').classList.remove('show'); }
+
+function pickLoc(el, loc) {
+  document.querySelectorAll('.loc-preset').forEach(e=>e.classList.remove('sel'));
+  el.classList.add('sel');
+  setLocation(loc);
+}
+
+function setLocation(loc) {
+  S.location = loc;
+  localStorage.setItem('harfi_loc', loc);
+  document.getElementById('home-loc').textContent = loc;
+  document.getElementById('set-loc-val').textContent = loc.split(',')[0];
+  if(S.token) {
+    fetch(`${API}/user/location`,{method:'PUT',headers:{'Content-Type':'application/json','Authorization':`Bearer ${S.token}`},body:JSON.stringify({location:loc})}).catch(()=>{});
+  }
+}
+
+function getGPSLocation() {
+  if(!navigator.geolocation){ showToast('GPS not available'); return; }
+  showToast(S.lang==='ar'?'📍 جاري تحديد موقعك...':'📍 Getting location...');
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const loc = `${pos.coords.latitude.toFixed(3)}, ${pos.coords.longitude.toFixed(3)}`;
+      setLocation(loc);
+      showToast(S.lang==='ar'?'✅ تم تحديد الموقع':'✅ Location set!');
+      closeLocModal();
+    },
+    () => showToast(S.lang==='ar'?'فشل تحديد الموقع':'Location failed')
+  );
+}
+
+// ══════════════════════════════════════════
+//  PWA INSTALL
+// ══════════════════════════════════════════
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  S.deferredPrompt = e;
+  document.getElementById('install-set').style.display = 'flex';
+});
+
+async function installPWA() {
+  if(!S.deferredPrompt){ showToast(S.lang==='ar'?'📱 Menu → Add to Home Screen':'📱 Menu → Add to Home Screen'); return; }
+  S.deferredPrompt.prompt();
+  const r = await S.deferredPrompt.userChoice;
+  if(r.outcome==='accepted') showToast(S.lang==='ar'?'🎉 تم التثبيت!':'🎉 Installed!');
+  S.deferredPrompt = null;
+}
+
+window.addEventListener('appinstalled',()=>{ showToast(S.lang==='ar'?'✅ تم تثبيت حرفي!':'✅ Harfi installed!'); });
+
+// ══════════════════════════════════════════
+//  OFFLINE
+// ══════════════════════════════════════════
+window.addEventListener('online',  ()=>document.getElementById('offline-banner').classList.remove('show'));
+window.addEventListener('offline', ()=>document.getElementById('offline-banner').classList.add('show'));
+if(!navigator.onLine) document.getElementById('offline-banner').classList.add('show');
+
+// ══════════════════════════════════════════
+//  SERVICE WORKER
+// ══════════════════════════════════════════
+if('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').then(r=>console.log('[Harfi] SW registered',r.scope)).catch(e=>console.warn('[Harfi] SW error',e));
+}
+
+// ══════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', ()=>{
+  if(S.dark){ document.body.classList.add('dark'); document.getElementById('dark-btn').textContent='☀️'; }
+  applyLang();
+  // Check auth
+  if(S.token && S.user) {
+    const params = new URLSearchParams(location.search);
+    const scr = params.get('s') || 'home';
+    showScreen(scr);
+  }
+  // OTP screen watch
+  const otpObs = new MutationObserver(()=>{ if(document.getElementById('screen-otp').classList.contains('active')) startOtpTimer(); });
+  otpObs.observe(document.getElementById('screen-otp'),{attributeFilter:['class']});
+  // Home greeting
+  const hr = new Date().getHours();
+  const greet = hr<12?'☀️':(hr<18?'👋':'🌙');
+  document.getElementById('home-greeting').textContent = S.lang==='ar'?`${greet} صباح الخير`:`${greet} ${hr<12?'Good morning':hr<18?'Good afternoon':'Good evening'}`;
+  // Location display
+  document.getElementById('home-loc').textContent = S.location;
+});
+</script>
+</body>
+</html>
